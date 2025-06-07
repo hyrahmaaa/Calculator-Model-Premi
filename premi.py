@@ -199,7 +199,7 @@ elif st.session_state.stage == 3:
     st.success(f"Nilai P_bar_I dari Sesi 2: **{st.session_state.PI_bar_result:.8f}**")
 
     # Ambil input harga sapi
-    P_price = st.number_input("Masukkan nilai P (Harga Sapi):", value=1000000.0, min_value=0.0, format="%.2f", key='p_price_s3')
+    P_price = st.number_input("Masukkan nilai P (Harga Sapi):", value=1000000.0, min_value=0.0, format="%.0f", key='p_price_s3')
 
     col1, col2 = st.columns(2)
     with col1:
@@ -207,7 +207,7 @@ elif st.session_state.stage == 3:
             P_TOTAL_result = calculate_P_TOTAL(st.session_state.PI_bar_result, st.session_state.n_from_stage1, P_price)
             st.subheader("Output Akhir:")
             st.balloons() # Efek visual
-            st.success(f"Nilai P_TOTAL: **{P_TOTAL_result:.8f}**")
+            st.success(f"Nilai P_TOTAL: **{P_TOTAL_result:.2f}**")
     with col2:
         if st.button("Mulai Ulang", key='btn_s3_reset'):
             st.session_state.clear() # Hapus semua data sesi
