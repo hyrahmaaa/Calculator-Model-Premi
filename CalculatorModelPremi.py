@@ -83,7 +83,7 @@ n_input = st.sidebar.number_input(
     "Masukkan nilai n (jumlah maksimum k, bilangan bulat non-negatif):",
     min_value=0,
     step=1,
-    value=10, # Default value
+    value=0, # Default value
     key="n_input"
 )
 
@@ -93,7 +93,7 @@ q_input = st.sidebar.number_input(
     min_value=0.0,
     max_value=1.0,
     step=0.01,
-    value=0.2, # Default value
+    value=0.000000, # Default value
     format="%.2f",
     key="q_input"
 )
@@ -103,7 +103,7 @@ t_input = st.sidebar.number_input(
     "Masukkan nilai t (waktu dalam tahun, non-negatif):",
     min_value=0.0,
     step=0.1,
-    value=1.0, # Default value
+    value=0.00, # Default value
     format="%.2f",
     key="t_input"
 )
@@ -111,7 +111,7 @@ t_input = st.sidebar.number_input(
 # Input widget untuk nilai-nilai lambda (dipisahkan koma)
 lambda_input_str = st.sidebar.text_input(
     "Masukkan variasi nilai lambda yang dipisahkan koma, contoh: 0.000696,0.000325):",
-    value="0.000696,0.000325,0.000128,0.000173", # Default values dari gambar
+    value="0.000000,0.000000,...", # Default values dari gambar
     key="lambda_str_input"
 )
 
