@@ -3,8 +3,7 @@ import pandas as pd
 import math
 import io
 from datetime import datetime
-import plotly.express as px
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 
 # --- Inisialisasi st.session_state ---
 if 'calculated_data' not in st.session_state:
@@ -85,7 +84,7 @@ n_input = st.sidebar.number_input(
     "Masukkan nilai n (jumlah maksimum k, bilangan bulat non-negatif):",
     min_value=0,
     step=1,
-    value=0, # Default value
+    value=10, # Default value
     key="n_input"
 )
 
@@ -95,7 +94,7 @@ q_input = st.sidebar.number_input(
     min_value=0.0,
     max_value=1.0,
     step=0.01,
-    value=0.000000, # Default value
+    value=0.2, # Default value
     format="%.2f",
     key="q_input"
 )
@@ -105,7 +104,7 @@ t_input = st.sidebar.number_input(
     "Masukkan nilai t (waktu dalam tahun, non-negatif):",
     min_value=0.0,
     step=0.1,
-    value=0.00, # Default value
+    value=1.0, # Default value
     format="%.2f",
     key="t_input"
 )
@@ -113,7 +112,7 @@ t_input = st.sidebar.number_input(
 # Input widget untuk nilai-nilai lambda (dipisahkan koma)
 lambda_input_str = st.sidebar.text_input(
     "Masukkan variasi nilai lambda yang dipisahkan koma, contoh: 0.000696,0.000325):",
-    value="0.000000,0.000000,...", # Default values dari gambar
+    value="0.000696,0.000325,0.000128,0.000173", # Default values dari gambar
     key="lambda_str_input"
 )
 
@@ -190,13 +189,19 @@ if not st.session_state['calculated_data']['table'].empty:
         else:
             st.success(f"🎉 Kolom '{col}': Total probabilitas mendekati 1.0 ({total:.10f}).")
 
-    # --- Fitur Rename File dan Unduh Tabel ---
-    st.markdown("---")
-    st.subheader("Unduh Tabel Hasil")
+    # Peringatan jika total tidak 1.0
+    for col, total in total_probs_series.items():
+        if not math.isclose(total, 1.0, rel_tol=1e-9):
+            st.warning(
+                f"⚠️ Peringatan untuk kolom '{col}': Total probabilitas tidak mendekati 1.0 ({total:.10f}). "
+                "Ini mungkin disebabkan oleh pembulatan atau sifat khusus dari formula distribusi."
+            )
+        else:
+            st.success(f"🎉 Kolom '{col}': Total probabilitas mendekati 1.0 ({total:.10f}).")
 
-        # --- Bagian Visualisasi Grafik ---
+    # --- Auto Generate Grafik ---
     st.markdown("---")
-    st.subheader("📊 Visualisasi Grafik")
+    st.subheader("📊 Grafik Distribusi Probabilitas")
     
     # Input untuk custom judul grafik
     chart_title = st.text_input(
@@ -205,123 +210,56 @@ if not st.session_state['calculated_data']['table'].empty:
         key="chart_title_input"
     )
     
-    # Pilihan jenis grafik
-    chart_type = st.selectbox(
-        "Pilih jenis grafik:",
-        ["Line Chart", "Bar Chart", "Area Chart"],
-        key="chart_type_select"
-    )
-    
-    # Buat grafik menggunakan Plotly
     try:
-        fig = go.Figure()
+        # Buat figure matplotlib
+        fig, ax = plt.subplots(figsize=(12, 8))
         
         # Ambil kolom lambda (semua kolom kecuali 'k')
         lambda_columns = [col for col in final_table.columns if col != 'k']
         
-        # Buat warna yang berbeda untuk setiap lambda
-        colors = px.colors.qualitative.Set1[:len(lambda_columns)]
+        # Warna yang berbeda untuk setiap lambda
+        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f']
         
+        # Plot garis untuk setiap nilai lambda
         for i, lambda_col in enumerate(lambda_columns):
-            if chart_type == "Line Chart":
-                fig.add_trace(go.Scatter(
-                    x=final_table['k'],
-                    y=final_table[lambda_col],
-                    mode='lines+markers',
-                    name=f'λ = {lambda_col}',
-                    line=dict(color=colors[i], width=3),
-                    marker=dict(size=6)
-                ))
-            elif chart_type == "Bar Chart":
-                fig.add_trace(go.Bar(
-                    x=final_table['k'],
-                    y=final_table[lambda_col],
-                    name=f'λ = {lambda_col}',
-                    marker_color=colors[i],
-                    opacity=0.8
-                ))
-            elif chart_type == "Area Chart":
-                fig.add_trace(go.Scatter(
-                    x=final_table['k'],
-                    y=final_table[lambda_col],
-                    mode='lines',
-                    name=f'λ = {lambda_col}',
-                    fill='tonexty' if i > 0 else 'tozeroy',
-                    line=dict(color=colors[i], width=2),
-                    fillcolor=colors[i]
-                ))
+            color = colors[i % len(colors)]
+            ax.plot(final_table['k'], final_table[lambda_col], 
+                   marker='o', linewidth=2.5, markersize=6, 
+                   label=f'λ = {lambda_col}', color=color)
         
-        # Update layout grafik
-        fig.update_layout(
-            title={
-                'text': chart_title,
-                'x': 0.5,
-                'xanchor': 'center',
-                'font': {'size': 18, 'family': 'Arial, sans-serif'}
-            },
-            xaxis_title="k (Nilai)",
-            yaxis_title="Probabilitas Pr{Wt = k}",
-            xaxis=dict(
-                tickmode='linear',
-                tick0=0,
-                dtick=1,
-                gridcolor='lightgray',
-                gridwidth=0.5
-            ),
-            yaxis=dict(
-                gridcolor='lightgray',
-                gridwidth=0.5,
-                tickformat='.4f'
-            ),
-            plot_bgcolor='white',
-            paper_bgcolor='white',
-            font=dict(family="Arial, sans-serif", size=12),
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1
-            ),
-            hovermode='x unified',
-            width=800,
-            height=500
-        )
+        # Styling grafik
+        ax.set_xlabel('k (Nilai)', fontsize=14, fontweight='bold')
+        ax.set_ylabel('Probabilitas Pr{Wt = k}', fontsize=14, fontweight='bold')
+        ax.set_title(chart_title, fontsize=16, fontweight='bold', pad=20)
         
-        # Tampilkan grafik
-        st.plotly_chart(fig, use_container_width=True)
+        # Set x-axis ticks untuk setiap nilai k
+        ax.set_xticks(final_table['k'])
         
-        # Opsi untuk download grafik
-        st.markdown("### 💾 Download Grafik")
+        # Grid
+        ax.grid(True, linestyle='--', alpha=0.7)
         
-        col_png, col_html = st.columns(2)
+        # Legend
+        ax.legend(loc='upper right', frameon=True, fancybox=True, shadow=True)
         
-        with col_png:
-            # Download sebagai PNG
-            img_bytes = fig.to_image(format="png", width=1200, height=700, scale=2)
-            png_filename = chart_title.replace(" ", "_").lower() + ".png"
-            st.download_button(
-                label="🖼️ Download PNG",
-                data=img_bytes,
-                file_name=png_filename,
-                mime="image/png"
-            )
+        # Tight layout
+        plt.tight_layout()
         
-        with col_html:
-            # Download sebagai HTML interaktif
-            html_str = fig.to_html(include_plotlyjs='cdn')
-            html_filename = chart_title.replace(" ", "_").lower() + ".html"
-            st.download_button(
-                label="🌐 Download HTML",
-                data=html_str,
-                file_name=html_filename,
-                mime="text/html"
-            )
-            
+        # Tampilkan grafik di Streamlit
+        st.pyplot(fig)
+        
+        # Clear figure untuk memory
+        plt.clf()
+        
+        st.success("✅ Grafik berhasil dibuat otomatis dari tabel hasil!")
+        
     except Exception as e:
         st.error(f"Terjadi kesalahan saat membuat grafik: {e}")
-        st.info("Pastikan data tabel tersedia dan coba lagi.")
-        
+        st.info("Grafik akan muncul otomatis setelah tabel hasil tersedia.")
+
+    # --- Fitur Rename File dan Unduh Tabel ---
+    st.markdown("---")
+    st.subheader("Unduh Tabel Hasil")
+    
     # Input untuk nama file custom
     custom_file_name = st.text_input(
         "Nama file (tanpa .csv):",
@@ -353,4 +291,3 @@ if not st.session_state['calculated_data']['table'].empty:
 
 st.sidebar.markdown("---")
 st.sidebar.info("Dibuat dengan Streamlit")
-st.sidebar.markdown("Dibuat dengan ❤️ menggunakan Streamlit")
