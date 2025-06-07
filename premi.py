@@ -101,7 +101,7 @@ def calculate_P_TOTAL(PI_bar_val, n_val, P_price):
 
 st.set_page_config(page_title="Kalkulator Asuransi Sapi", layout="centered")
 
-st.title("🐮 Kalkulator Asuransi Sapi Multi-Sesi 🐮")
+st.title("🐮 Kalkulator Asuransi Sapi Perhitungan Premi Total")
 st.markdown("Aplikasi ini membantu menghitung berbagai metrik asuransi sapi secara bertahap.")
 
 # Inisialisasi session state untuk stage jika belum ada
