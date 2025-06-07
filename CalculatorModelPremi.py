@@ -172,7 +172,27 @@ if st.sidebar.button("Hitung Probabilitas"):
                     else:
                         st.success(f"🎉 Kolom '{col}': Total probabilitas mendekati 1.0 ({total:.10f}).")
 
-                # --- Tombol Unduh Tabel ---
+                # --- Fitur Rename File dan Unduh Tabel ---
+                st.markdown("---")
+                st.subheader("Unduh Tabel Hasil")
+                
+                # Input untuk nama file
+                default_file_name = f"tabel_probabilitas_n{n_input}.csv"
+                custom_file_name = st.text_input(
+                    "Masukkan nama file untuk diunduh (tanpa ekstensi .csv):",
+                    value=default_file_name.replace(".csv", ""), # Tampilkan tanpa .csv di default
+                    key="download_file_name"
+                )
+                
+                # Pastikan ekstensi .csv ada
+                if custom_file_name.strip() == "":
+                    final_download_name = default_file_name
+                elif not custom_file_name.endswith(".csv"):
+                    final_download_name = custom_file_name.strip() + ".csv"
+                else:
+                    final_download_name = custom_file_name.strip()
+
+                # Konversi DataFrame ke string CSV
                 csv_string_io = io.StringIO()
                 # Simpan DataFrame ke string buffer dalam format CSV
                 # float_format='%.6g' memastikan format angka yang sama saat diunduh
