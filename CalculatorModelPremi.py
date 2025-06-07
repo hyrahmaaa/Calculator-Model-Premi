@@ -74,7 +74,7 @@ st.markdown(
         q^n (e^{-\\lambda t})a + (1-a), & k = n.
     \\end{cases}
     $$
-    dengan $q = 1 - p$ dan $a = (e^{-\\lambda t}$
+    dengan $q = 1 - p$ dan $a = (e^{-\\lambda t})$
     """
 )
 
