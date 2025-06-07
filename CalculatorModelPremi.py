@@ -71,7 +71,7 @@ st.markdown(
     Pr\\{W_t = k\\} =
     \\begin{cases}
         \\binom{n}{k} q^k p^{n-k} a, & k = 0, 1, 2, \\dots, (n-1) \\\\
-        q^n (e^{-\\lambda t})a + (1-a), & k = n.
+        q^n a + (1-a), & k = n.
     \\end{cases}
     $$
     dengan $q = 1 - p$ dan $a = (e^{-\\lambda t})$
@@ -112,7 +112,7 @@ t_input = st.sidebar.number_input(
 
 # Input widget untuk nilai-nilai lambda (dipisahkan koma)
 lambda_input_str = st.sidebar.text_input(
-    "Masukkan variasi nilai lambda yang dipisahkan koma, contoh: lambda1,lambda2,dst):",
+    "Masukkan variasi nilai lambda yang dipisahkan koma, contoh: 0.000696,0.000325):",
     value="0.000696,0.000325,0.000128,0.000173", # Default values dari gambar
     key="lambda_str_input"
 )
@@ -177,20 +177,23 @@ if st.sidebar.button("Hitung Probabilitas"):
                 st.subheader("Unduh Tabel Hasil")
                 
                 # Input untuk nama file
-                default_file_name = f"tabel_probabilitas_n{n_input}.csv"
-                custom_file_name = st.text_input(
+                # Nama file default bisa lebih dinamis, misal menyertakan parameter
+                default_file_name = f"tabel_probabilitas_n{n_input}_q{q_input}_t{t_input}.csv"
+                # Menghilangkan ".csv" dari default value di text_input
+                custom_file_name_base = st.text_input(
                     "Masukkan nama file untuk diunduh (tanpa ekstensi .csv):",
-                    value=default_file_name.replace(".csv", ""), # Tampilkan tanpa .csv di default
+                    value=default_file_name.replace(".csv", ""),
                     key="download_file_name"
                 )
                 
-                # Pastikan ekstensi .csv ada
-                if custom_file_name.strip() == "":
+                # Pastikan nama file tidak kosong dan tambahkan ekstensi .csv jika belum ada
+                if custom_file_name_base.strip() == "":
                     final_download_name = default_file_name
-                elif not custom_file_name.endswith(".csv"):
-                    final_download_name = custom_file_name.strip() + ".csv"
+                elif not custom_file_name_base.strip().endswith(".csv"):
+                    final_download_name = custom_file_name_base.strip() + ".csv"
                 else:
-                    final_download_name = custom_file_name.strip()
+                    final_download_name = custom_file_name_base.strip()
+
 
                 # Konversi DataFrame ke string CSV
                 csv_string_io = io.StringIO()
@@ -199,11 +202,13 @@ if st.sidebar.button("Hitung Probabilitas"):
                 final_table.to_csv(csv_string_io, index=False, float_format='%.6g')
                 csv_bytes = csv_string_io.getvalue().encode('utf-8')
 
+                # Tombol Unduh
                 st.download_button(
                     label="Unduh Tabel sebagai CSV",
                     data=csv_bytes,
-                    file_name="tabel_probabilitas_Wt.csv",
-                    mime="text/csv"
+                    file_name=final_download_name, # Menggunakan nama file dari input pengguna
+                    mime="text/csv",
+                    key="download_button"
                 )
 
         except Exception as e:
