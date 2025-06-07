@@ -61,20 +61,20 @@ def generate_probability_table(n, q, t, lambda_values_dict):
 
 # --- Bagian UI Streamlit ---
 
-st.title("🧮 Kalkulator Probabilitas Pr{Wt = k}")
+st.title("🧮 Kalkulator Probabilitas Wt")
 
 st.markdown(
     """
-    Aplikasi ini menghitung probabilitas $Pr\\{W_t = k\\}$ berdasarkan rumus:
+    Aplikasi ini menghitung probabilitas $Pr\\{W_t = k\\}$ berdasarkan formula:
 
     $$
     Pr\\{W_t = k\\} =
     \\begin{cases}
-        \\binom{n}{k} q^k p^{n-k} (e^{-\\lambda t}), & k = 0, 1, 2, \\dots, (n-1) \\\\
-        q^n (e^{-\\lambda t}) + (1-(e^{-\\lambda t})), & k = n.
+        \\binom{n}{k} q^k p^{n-k} a, & k = 0, 1, 2, \\dots, (n-1) \\\\
+        q^n (e^{-\\lambda t})a + (1-a), & k = n.
     \\end{cases}
     $$
-    dengan $q = 1 - p$.
+    dengan $q = 1 - p$ dan $a = (e^{-\\lambda t}$
     """
 )
 
@@ -102,7 +102,7 @@ q_input = st.sidebar.number_input(
 
 # Input widget untuk t
 t_input = st.sidebar.number_input(
-    "Masukkan nilai t (waktu, non-negatif):",
+    "Masukkan nilai t (waktu dalam tahun, non-negatif):",
     min_value=0.0,
     step=0.1,
     value=1.0, # Default value
@@ -112,7 +112,7 @@ t_input = st.sidebar.number_input(
 
 # Input widget untuk nilai-nilai lambda (dipisahkan koma)
 lambda_input_str = st.sidebar.text_input(
-    "Masukkan nilai lambda (dipisahkan koma, contoh: 0.000696,0.000325):",
+    "Masukkan variasi nilai lambda yang dipisahkan koma, contoh: lambda1,lambda2,dst):",
     value="0.000696,0.000325,0.000128,0.000173", # Default values dari gambar
     key="lambda_str_input"
 )
