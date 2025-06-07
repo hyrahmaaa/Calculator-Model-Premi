@@ -122,7 +122,7 @@ if st.session_state.stage == 1:
         d = st.number_input("Masukkan nilai d:", value=5, min_value=0, max_value=n, step=1, key='d_s1')
     with col2:
         u = st.number_input("Masukkan nilai u:", value=10, min_value=0, max_value=n, step=1, key='u_s1')
-        q = st.number_input("Masukkan nilai q (probabilitas kematian/kegagalan, 0-1):", value=0.005, min_value=0.0, max_value=1.0, format="%.4f", key='q_s1')
+        q = st.number_input("Masukkan nilai q (probabilitas kematian/kegagalan, 0-1):", value=0.005, min_value=0.0, max_value=1.0, format="%.6f", key='q_s1')
         alpha_val = st.number_input("Masukkan nilai Alpha (α):", value=0.5, format="%.2f", key='alpha_s1')
         # p dihitung otomatis, tidak perlu input
 
