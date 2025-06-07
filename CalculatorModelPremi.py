@@ -163,7 +163,7 @@ if st.sidebar.button("Hitung Probabilitas"):
 # --- Bagian Tampilan Hasil dan Unduh ---
 if not st.session_state['calculated_data']['table'].empty:
     final_table = st.session_state['calculated_data']['table']
-    table_params = st.session_state['calculated_data']['params'] # Masih bisa digunakan untuk display parameter
+    table_params = st.session_state['calculated_data']['params']
 
     st.subheader("Hasil Perhitungan")
     st.write(f"Parameter: n={table_params['n']}, q={table_params['q']}, t={table_params['t']}")
@@ -195,16 +195,15 @@ if not st.session_state['calculated_data']['table'].empty:
     base_default_name = "tabel_probabilitas_Wt" 
 
     # Input untuk nama file. Nilai defaultnya adalah nama statis dasar
-    # Key dibuat statis karena nilai defaultnya juga statis, tidak perlu direset
     custom_file_name_base = st.text_input(
         "Masukkan nama file untuk diunduh (tanpa ekstensi .csv):",
         value=base_default_name,
-        key="download_file_name_input_static" # Key statis
+        key="download_file_name_input_static"
     )
     
     # Pastikan nama file tidak kosong dan tambahkan ekstensi .csv jika belum ada
     if custom_file_name_base.strip() == "":
-        final_download_name = base_default_name + ".csv" # Fallback ke default statis
+        final_download_name = base_default_name + ".csv" 
     elif not custom_file_name_base.strip().endswith(".csv"):
         final_download_name = custom_file_name_base.strip() + ".csv"
     else:
@@ -219,12 +218,14 @@ if not st.session_state['calculated_data']['table'].empty:
     csv_bytes = csv_string_io.getvalue().encode('utf-8')
 
     # Tombol Unduh
+    # Key dibuat dinamis berdasarkan final_download_name agar Streamlit merefresh tombol
+    # saat nama file berubah, mengatasi masalah cache.
     st.download_button(
         label="Unduh Tabel sebagai CSV",
         data=csv_bytes,
         file_name=final_download_name,
         mime="text/csv",
-        key="download_button_final" # Key yang berbeda dari text_input
+        key=f"download_button_{final_download_name}" # KEY DINAMIS DITAMBAHKAN DI SINI
     )
 
 st.sidebar.markdown("---")
