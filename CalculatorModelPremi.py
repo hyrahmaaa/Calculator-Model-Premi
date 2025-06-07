@@ -4,7 +4,6 @@ import math
 import io
 
 # --- Inisialisasi st.session_state ---
-# Ini penting agar tabel hasil dan parameternya tetap ada di memori Streamlit antar rerun
 if 'calculated_data' not in st.session_state:
     st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}}
 
@@ -120,7 +119,7 @@ if st.sidebar.button("Hitung Probabilitas"):
     # Validasi Input
     if n_input < 0:
         st.error("Nilai 'n' harus bilangan bulat non-negatif.")
-        st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}} # Clear on error
+        st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}}
         st.stop()
     if not (0 <= q_input <= 1):
         st.error("Nilai 'q' harus antara 0 dan 1.")
@@ -147,13 +146,11 @@ if st.sidebar.button("Hitung Probabilitas"):
 
     if not parsed_lambdas:
         st.warning("Tidak ada nilai lambda yang dimasukkan. Tidak ada tabel yang akan dibuat.")
-        st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}} # Clear on empty lambdas
+        st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}}
     else:
         try:
-            # Hitung tabel
             temp_final_table = generate_probability_table(n_input, q_input, t_input, lambda_data)
             
-            # Simpan tabel dan parameter input ke session_state
             st.session_state['calculated_data'] = {
                 'table': temp_final_table,
                 'params': {'n': n_input, 'q': q_input, 't': t_input, 'lambdas_str': lambda_input_str}
@@ -161,12 +158,12 @@ if st.sidebar.button("Hitung Probabilitas"):
         except Exception as e:
             st.error(f"Terjadi kesalahan saat menghitung: {e}")
             st.info("Pastikan input Anda valid dan coba lagi.")
-            st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}} # Clear on error
+            st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}}
 
-# --- Bagian Tampilan Hasil dan Unduh (akan muncul jika tabel sudah dihitung) ---
+# --- Bagian Tampilan Hasil dan Unduh ---
 if not st.session_state['calculated_data']['table'].empty:
-    final_table = st.session_state['calculated_data']['table'] # Ambil tabel dari session_state
-    table_params = st.session_state['calculated_data']['params'] # Ambil parameter dari session_state
+    final_table = st.session_state['calculated_data']['table']
+    table_params = st.session_state['calculated_data']['params'] # Masih bisa digunakan untuk display parameter
 
     st.subheader("Hasil Perhitungan")
     st.write(f"Parameter: n={table_params['n']}, q={table_params['q']}, t={table_params['t']}")
@@ -194,23 +191,20 @@ if not st.session_state['calculated_data']['table'].empty:
     st.markdown("---")
     st.subheader("Unduh Tabel Hasil")
     
-    # Generate nama file default berdasarkan parameter tabel yang sedang ditampilkan
-    default_file_name_dynamic = (
-        f"tabel_probabilitas_n{table_params['n']}_q{table_params['q']}_t{table_params['t']}.csv"
-    )
+    # Nama file default yang sederhana dan statis
+    base_default_name = "tabel_probabilitas_Wt" 
 
-    # Input untuk nama file. Key-nya dibuat unik berdasarkan parameter
-    # agar Streamlit "mereset" nilai default jika parameter tabel berubah.
+    # Input untuk nama file. Nilai defaultnya adalah nama statis dasar
+    # Key dibuat statis karena nilai defaultnya juga statis, tidak perlu direset
     custom_file_name_base = st.text_input(
         "Masukkan nama file untuk diunduh (tanpa ekstensi .csv):",
-        value=default_file_name_dynamic.replace(".csv", ""),
-        key=f"download_file_name_{table_params['n']}_{table_params['q']}_{table_params['t']}" 
-        # Tambahkan lambda_input_str ke key jika banyak lambdas berbeda membuat nama default terlalu panjang
+        value=base_default_name,
+        key="download_file_name_input_static" # Key statis
     )
     
     # Pastikan nama file tidak kosong dan tambahkan ekstensi .csv jika belum ada
     if custom_file_name_base.strip() == "":
-        final_download_name = default_file_name_dynamic
+        final_download_name = base_default_name + ".csv" # Fallback ke default statis
     elif not custom_file_name_base.strip().endswith(".csv"):
         final_download_name = custom_file_name_base.strip() + ".csv"
     else:
@@ -230,7 +224,7 @@ if not st.session_state['calculated_data']['table'].empty:
         data=csv_bytes,
         file_name=final_download_name,
         mime="text/csv",
-        key="download_button"
+        key="download_button_final" # Key yang berbeda dari text_input
     )
 
 st.sidebar.markdown("---")
