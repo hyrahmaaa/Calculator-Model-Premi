@@ -3,6 +3,8 @@ import pandas as pd
 import math
 import io
 from datetime import datetime
+import plotly.express as px
+import plotly.graph_objects as go
 
 # --- Inisialisasi st.session_state ---
 if 'calculated_data' not in st.session_state:
@@ -191,7 +193,135 @@ if not st.session_state['calculated_data']['table'].empty:
     # --- Fitur Rename File dan Unduh Tabel ---
     st.markdown("---")
     st.subheader("Unduh Tabel Hasil")
+
+        # --- Bagian Visualisasi Grafik ---
+    st.markdown("---")
+    st.subheader("📊 Visualisasi Grafik")
     
+    # Input untuk custom judul grafik
+    chart_title = st.text_input(
+        "Judul Grafik:",
+        value="Distribusi Probabilitas Wt",
+        key="chart_title_input"
+    )
+    
+    # Pilihan jenis grafik
+    chart_type = st.selectbox(
+        "Pilih jenis grafik:",
+        ["Line Chart", "Bar Chart", "Area Chart"],
+        key="chart_type_select"
+    )
+    
+    # Buat grafik menggunakan Plotly
+    try:
+        fig = go.Figure()
+        
+        # Ambil kolom lambda (semua kolom kecuali 'k')
+        lambda_columns = [col for col in final_table.columns if col != 'k']
+        
+        # Buat warna yang berbeda untuk setiap lambda
+        colors = px.colors.qualitative.Set1[:len(lambda_columns)]
+        
+        for i, lambda_col in enumerate(lambda_columns):
+            if chart_type == "Line Chart":
+                fig.add_trace(go.Scatter(
+                    x=final_table['k'],
+                    y=final_table[lambda_col],
+                    mode='lines+markers',
+                    name=f'λ = {lambda_col}',
+                    line=dict(color=colors[i], width=3),
+                    marker=dict(size=6)
+                ))
+            elif chart_type == "Bar Chart":
+                fig.add_trace(go.Bar(
+                    x=final_table['k'],
+                    y=final_table[lambda_col],
+                    name=f'λ = {lambda_col}',
+                    marker_color=colors[i],
+                    opacity=0.8
+                ))
+            elif chart_type == "Area Chart":
+                fig.add_trace(go.Scatter(
+                    x=final_table['k'],
+                    y=final_table[lambda_col],
+                    mode='lines',
+                    name=f'λ = {lambda_col}',
+                    fill='tonexty' if i > 0 else 'tozeroy',
+                    line=dict(color=colors[i], width=2),
+                    fillcolor=colors[i]
+                ))
+        
+        # Update layout grafik
+        fig.update_layout(
+            title={
+                'text': chart_title,
+                'x': 0.5,
+                'xanchor': 'center',
+                'font': {'size': 18, 'family': 'Arial, sans-serif'}
+            },
+            xaxis_title="k (Nilai)",
+            yaxis_title="Probabilitas Pr{Wt = k}",
+            xaxis=dict(
+                tickmode='linear',
+                tick0=0,
+                dtick=1,
+                gridcolor='lightgray',
+                gridwidth=0.5
+            ),
+            yaxis=dict(
+                gridcolor='lightgray',
+                gridwidth=0.5,
+                tickformat='.4f'
+            ),
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+            font=dict(family="Arial, sans-serif", size=12),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ),
+            hovermode='x unified',
+            width=800,
+            height=500
+        )
+        
+        # Tampilkan grafik
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Opsi untuk download grafik
+        st.markdown("### 💾 Download Grafik")
+        
+        col_png, col_html = st.columns(2)
+        
+        with col_png:
+            # Download sebagai PNG
+            img_bytes = fig.to_image(format="png", width=1200, height=700, scale=2)
+            png_filename = chart_title.replace(" ", "_").lower() + ".png"
+            st.download_button(
+                label="🖼️ Download PNG",
+                data=img_bytes,
+                file_name=png_filename,
+                mime="image/png"
+            )
+        
+        with col_html:
+            # Download sebagai HTML interaktif
+            html_str = fig.to_html(include_plotlyjs='cdn')
+            html_filename = chart_title.replace(" ", "_").lower() + ".html"
+            st.download_button(
+                label="🌐 Download HTML",
+                data=html_str,
+                file_name=html_filename,
+                mime="text/html"
+            )
+            
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat membuat grafik: {e}")
+        st.info("Pastikan data tabel tersedia dan coba lagi.")
+        
     # Input untuk nama file custom
     custom_file_name = st.text_input(
         "Nama file (tanpa .csv):",
