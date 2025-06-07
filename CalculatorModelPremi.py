@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import math
 import io
+from datetime import datetime
 
 # --- Inisialisasi st.session_state ---
 if 'calculated_data' not in st.session_state:
@@ -191,42 +192,113 @@ if not st.session_state['calculated_data']['table'].empty:
     st.markdown("---")
     st.subheader("Unduh Tabel Hasil")
     
-    # Nama file default yang sederhana dan statis
-    base_default_name = "tabel_probabilitas_Wt" 
-
-    # Input untuk nama file. Nilai defaultnya adalah nama statis dasar
-    custom_file_name_base = st.text_input(
-        "Masukkan nama file untuk diunduh (tanpa ekstensi .csv):",
-        value=base_default_name,
-        key="download_file_name_input_static"
-    )
+    # Buat container untuk input nama file dan preview
+    col1, col2 = st.columns([3, 1])
     
-    # Pastikan nama file tidak kosong dan tambahkan ekstensi .csv jika belum ada
-    if custom_file_name_base.strip() == "":
-        final_download_name = base_default_name + ".csv" 
-    elif not custom_file_name_base.strip().endswith(".csv"):
-        final_download_name = custom_file_name_base.strip() + ".csv"
+    with col1:
+        # Input untuk nama file custom
+        custom_file_name = st.text_input(
+            "Nama file custom (tanpa .csv):",
+            value="tabel_probabilitas_Wt",
+            help="Masukkan nama file yang Anda inginkan",
+            key="custom_filename_input"
+        )
+    
+    with col2:
+        # Checkbox untuk menambahkan timestamp
+        add_timestamp = st.checkbox(
+            "Tambah timestamp", 
+            value=False,
+            help="Menambahkan tanggal dan waktu pada nama file"
+        )
+    
+    # Validasi dan format nama file
+    if custom_file_name.strip():
+        # Bersihkan nama file dari karakter yang tidak diizinkan
+        clean_filename = "".join(c for c in custom_file_name.strip() if c.isalnum() or c in (' ', '-', '_')).rstrip()
+        
+        # Tambahkan timestamp jika dipilih
+        if add_timestamp:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            final_filename = f"{clean_filename}_{timestamp}.csv"
+        else:
+            final_filename = f"{clean_filename}.csv"
     else:
-        final_download_name = custom_file_name_base.strip()
+        # Nama default jika input kosong
+        final_filename = "tabel_probabilitas_Wt.csv"
+    
+    # Preview nama file yang akan diunduh
+    st.info(f"📁 File akan diunduh dengan nama: **{final_filename}**")
+    
+    # Konversi DataFrame ke CSV
+    try:
+        # Menggunakan buffer untuk CSV
+        csv_buffer = io.StringIO()
+        final_table.to_csv(csv_buffer, index=False, float_format='%.6g')
+        csv_data = csv_buffer.getvalue()
+        
+        # Encode to bytes
+        csv_bytes = csv_data.encode('utf-8')
+        
+        # Tombol download dengan nama file yang sudah disiapkan
+        st.download_button(
+            label="📥 Unduh Tabel CSV",
+            data=csv_bytes,
+            file_name=final_filename,  # Menggunakan nama file yang sudah diformat
+            mime="text/csv",
+            type="primary",
+            help=f"Klik untuk mengunduh file: {final_filename}",
+            key="download_csv_button"  # Key statis untuk menghindari masalah refresh
+        )
+        
+        # Informasi tambahan tentang file
+        file_size_kb = len(csv_bytes) / 1024
+        st.caption(f"Ukuran file: {file_size_kb:.2f} KB | Format: CSV | Encoding: UTF-8")
+        
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat menyiapkan file download: {e}")
 
-    # (Opsional) Baris debug untuk melihat nama file akhir
-    # st.info(f"Nama file yang akan diunduh: {final_download_name}")
-
-    # Konversi DataFrame ke string CSV
-    csv_string_io = io.StringIO()
-    final_table.to_csv(csv_string_io, index=False, float_format='%.6g')
-    csv_bytes = csv_string_io.getvalue().encode('utf-8')
-
-    # Tombol Unduh
-    # Key dibuat dinamis berdasarkan final_download_name agar Streamlit merefresh tombol
-    # saat nama file berubah, mengatasi masalah cache.
-    st.download_button(
-        label="Unduh Tabel sebagai CSV",
-        data=csv_bytes,
-        file_name=final_download_name,
-        mime="text/csv",
-        key=f"download_button_{final_download_name}" # KEY DINAMIS DITAMBAHKAN DI SINI
-    )
+    # Opsi download format lain
+    st.markdown("### Format Download Lainnya")
+    
+    col_excel, col_json = st.columns(2)
+    
+    with col_excel:
+        # Download sebagai Excel
+        try:
+            excel_buffer = io.BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+                final_table.to_excel(writer, index=False, sheet_name='Probabilitas')
+            excel_data = excel_buffer.getvalue()
+            
+            excel_filename = final_filename.replace('.csv', '.xlsx')
+            
+            st.download_button(
+                label="📊 Unduh sebagai Excel",
+                data=excel_data,
+                file_name=excel_filename,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="download_excel_button"
+            )
+        except Exception as e:
+            st.error(f"Error Excel export: {e}")
+    
+    with col_json:
+        # Download sebagai JSON
+        try:
+            json_data = final_table.to_json(orient='records', indent=2)
+            json_filename = final_filename.replace('.csv', '.json')
+            
+            st.download_button(
+                label="📄 Unduh sebagai JSON",
+                data=json_data,
+                file_name=json_filename,
+                mime="application/json",
+                key="download_json_button"
+            )
+        except Exception as e:
+            st.error(f"Error JSON export: {e}")
 
 st.sidebar.markdown("---")
-st.sidebar.info("Dibuat dengan Streamlit")
+st.sidebar.info("💡 **Tips**: Gunakan nama file yang deskriptif untuk memudahkan identifikasi hasil perhitungan Anda.")
+st.sidebar.markdown("Dibuat dengan ❤️ menggunakan Streamlit")
