@@ -163,10 +163,10 @@ elif st.session_state.stage == 2:
 
     col1, col2 = st.columns(2)
     with col1:
-        rho = st.number_input("Masukkan nilai Rho (ρ):", value=0.05, format="%.6f", key='rho_s2')
-        eta = st.number_input("Masukkan nilai Eta (η):", value=0.02, format="%.6f", key='eta_s2')
+        rho = st.number_input("Masukkan nilai Rho (ρ):", value=0.05, format="%.2f", key='rho_s2')
+        eta = st.number_input("Masukkan nilai Eta (η):", value=0.02, format="%.2f", key='eta_s2')
     with col2:
-        QT = st.number_input("Masukkan nilai QT:", value=0.1, min_value=0.0, max_value=1.0, format="%.4f", key='qt_s2')
+        QT = st.number_input("Masukkan nilai QT:", value=0.1, min_value=0.0, max_value=1.0, format="%.2f", key='qt_s2')
 
     if st.button("Hitung Sesi 2", key='btn_s2_hitung'):
         if not (0 <= QT <= 1):
