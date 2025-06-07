@@ -1,15 +1,13 @@
 import streamlit as st
 import pandas as pd
 import math
-import io
-from datetime import datetime
 import matplotlib.pyplot as plt
 
 # --- Inisialisasi st.session_state ---
 if 'calculated_data' not in st.session_state:
     st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}}
 
-# --- Fungsi Perhitungan Inti (Tidak Berubah) ---
+# --- Fungsi Perhitungan Inti ---
 def calculate_pr_Wt_k_for_single_lambda(n, q, lambda_val, t_val):
     p = 1 - q
     probabilities = []
@@ -27,7 +25,7 @@ def calculate_pr_Wt_k_for_single_lambda(n, q, lambda_val, t_val):
         if k < n:
             binomial_coefficient = math.comb(n, k)
             prob_k = binomial_coefficient * (q**k) * (p**(n - k)) * exp_lambda_t
-        else: # k == n
+        else:  # k == n
             prob_k = (q**n * exp_lambda_t) + (1 - exp_lambda_t)
         
         probabilities.append(prob_k)
@@ -52,7 +50,6 @@ def generate_probability_table(n, q, t, lambda_values_dict):
     return df
 
 # --- Bagian UI Streamlit ---
-
 st.set_page_config(
     page_title="Kalkulator Pr{Wt = k} (Distribusi Modifikasi)",
     page_icon="🧮",
@@ -84,7 +81,7 @@ n_input = st.sidebar.number_input(
     "Masukkan nilai n (jumlah maksimum k, bilangan bulat non-negatif):",
     min_value=0,
     step=1,
-    value=10, # Default value
+    value=10,  # Default value
     key="n_input"
 )
 
@@ -94,7 +91,7 @@ q_input = st.sidebar.number_input(
     min_value=0.0,
     max_value=1.0,
     step=0.01,
-    value=0.2, # Default value
+    value=0.2,  # Default value
     format="%.2f",
     key="q_input"
 )
@@ -104,15 +101,15 @@ t_input = st.sidebar.number_input(
     "Masukkan nilai t (waktu dalam tahun, non-negatif):",
     min_value=0.0,
     step=0.1,
-    value=1.0, # Default value
+    value=1.0,  # Default value
     format="%.2f",
     key="t_input"
 )
 
 # Input widget untuk nilai-nilai lambda (dipisahkan koma)
 lambda_input_str = st.sidebar.text_input(
-    "Masukkan variasi nilai lambda yang dipisahkan koma, contoh: 0.000696,0.000325):",
-    value="0.000696,0.000325,0.000128,0.000173", # Default values dari gambar
+    "Masukkan variasi nilai lambda yang dipisahkan koma, contoh: 0.000696,0.000325:",
+    value="0.000696,0.000325,0.000128,0.000173",  # Default values
     key="lambda_str_input"
 )
 
@@ -140,7 +137,7 @@ if st.sidebar.button("Hitung Probabilitas"):
             try:
                 val = float(item.strip())
                 parsed_lambdas.append(val)
-                lambda_data[item.strip()] = val # Key adalah string dari nilai lambda
+                lambda_data[item.strip()] = val  # Key adalah string dari nilai lambda
             except ValueError:
                 st.error(f"Nilai lambda '{item.strip()}' tidak valid. Harap masukkan angka yang dipisahkan koma.")
                 st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}}
@@ -178,16 +175,6 @@ if not st.session_state['calculated_data']['table'].empty:
     st.markdown("**Total Probabilitas (Per Kolom Lambda):**")
     total_probs_series = final_table.drop(columns=['k']).sum()
     st.dataframe(total_probs_series.to_frame().T.style.format('{:.6g}'))
-
-    # Peringatan jika total tidak 1.0
-    for col, total in total_probs_series.items():
-        if not math.isclose(total, 1.0, rel_tol=1e-9):
-            st.warning(
-                f"⚠️ Peringatan untuk kolom '{col}': Total probabilitas tidak mendekati 1.0 ({total:.10f}). "
-                "Ini mungkin disebabkan oleh pembulatan atau sifat khusus dari formula distribusi."
-            )
-        else:
-            st.success(f"🎉 Kolom '{col}': Total probabilitas mendekati 1.0 ({total:.10f}).")
 
     # Peringatan jika total tidak 1.0
     for col, total in total_probs_series.items():
@@ -271,17 +258,14 @@ if not st.session_state['calculated_data']['table'].empty:
     if custom_file_name.strip():
         # Hapus karakter yang tidak diizinkan dan tambahkan .csv
         clean_name = "".join(c for c in custom_file_name.strip() if c.isalnum() or c in (' ', '-', '_'))
-        if clean_name:
-            final_filename = f"{clean_name}.csv"
-        else:
-            final_filename = "tabel_probabilitas_Wt.csv"
+        final_filename = f"{clean_name}.csv" if clean_name else "tabel_probabilitas_Wt.csv"
     else:
         final_filename = "tabel_probabilitas_Wt.csv"
     
     # Konversi DataFrame ke CSV
     csv_data = final_table.to_csv(index=False, float_format='%.6g')
     
-    # Tombol download - menggunakan approach yang lebih sederhana
+    # Tombol download
     st.download_button(
         label=f"📥 Unduh: {final_filename}",
         data=csv_data,
