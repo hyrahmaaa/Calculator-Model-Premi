@@ -4,9 +4,9 @@ import math
 import io
 
 # --- Inisialisasi st.session_state ---
-# Ini penting agar tabel hasil tetap ada di memori Streamlit antar rerun
-if 'calculated_table' not in st.session_state:
-    st.session_state['calculated_table'] = pd.DataFrame() # Inisialisasi sebagai DataFrame kosong
+# Ini penting agar tabel hasil dan parameternya tetap ada di memori Streamlit antar rerun
+if 'calculated_data' not in st.session_state:
+    st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}}
 
 # --- Fungsi Perhitungan Inti (Tidak Berubah) ---
 def calculate_pr_Wt_k_for_single_lambda(n, q, lambda_val, t_val):
@@ -120,15 +120,15 @@ if st.sidebar.button("Hitung Probabilitas"):
     # Validasi Input
     if n_input < 0:
         st.error("Nilai 'n' harus bilangan bulat non-negatif.")
-        st.session_state['calculated_table'] = pd.DataFrame() # Clear table on error
+        st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}} # Clear on error
         st.stop()
     if not (0 <= q_input <= 1):
         st.error("Nilai 'q' harus antara 0 dan 1.")
-        st.session_state['calculated_table'] = pd.DataFrame()
+        st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}}
         st.stop()
     if t_input < 0:
         st.error("Nilai 't' harus non-negatif.")
-        st.session_state['calculated_table'] = pd.DataFrame()
+        st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}}
         st.stop()
 
     # Parse string lambda menjadi dictionary
@@ -142,29 +142,34 @@ if st.sidebar.button("Hitung Probabilitas"):
                 lambda_data[item.strip()] = val # Key adalah string dari nilai lambda
             except ValueError:
                 st.error(f"Nilai lambda '{item.strip()}' tidak valid. Harap masukkan angka yang dipisahkan koma.")
-                st.session_state['calculated_table'] = pd.DataFrame()
+                st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}}
                 st.stop()
 
     if not parsed_lambdas:
         st.warning("Tidak ada nilai lambda yang dimasukkan. Tidak ada tabel yang akan dibuat.")
-        st.session_state['calculated_table'] = pd.DataFrame() # Clear table if no lambdas
+        st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}} # Clear on empty lambdas
     else:
         try:
-            # Hitung dan simpan tabel ke session_state
-            st.session_state['calculated_table'] = generate_probability_table(n_input, q_input, t_input, lambda_data)
+            # Hitung tabel
+            temp_final_table = generate_probability_table(n_input, q_input, t_input, lambda_data)
+            
+            # Simpan tabel dan parameter input ke session_state
+            st.session_state['calculated_data'] = {
+                'table': temp_final_table,
+                'params': {'n': n_input, 'q': q_input, 't': t_input, 'lambdas_str': lambda_input_str}
+            }
         except Exception as e:
             st.error(f"Terjadi kesalahan saat menghitung: {e}")
             st.info("Pastikan input Anda valid dan coba lagi.")
-            st.session_state['calculated_table'] = pd.DataFrame() # Clear table on error
+            st.session_state['calculated_data'] = {'table': pd.DataFrame(), 'params': {}} # Clear on error
 
 # --- Bagian Tampilan Hasil dan Unduh (akan muncul jika tabel sudah dihitung) ---
-# Bagian ini TIDAK berada di dalam blok 'if st.sidebar.button("Hitung Probabilitas"):
-# sehingga tampilan dan tombol unduh tetap ada saat Streamlit melakukan rerun.
-if not st.session_state['calculated_table'].empty:
-    final_table = st.session_state['calculated_table'] # Ambil tabel dari session_state
+if not st.session_state['calculated_data']['table'].empty:
+    final_table = st.session_state['calculated_data']['table'] # Ambil tabel dari session_state
+    table_params = st.session_state['calculated_data']['params'] # Ambil parameter dari session_state
 
     st.subheader("Hasil Perhitungan")
-    st.write(f"Parameter: n={n_input}, q={q_input}, t={t_input}")
+    st.write(f"Parameter: n={table_params['n']}, q={table_params['q']}, t={table_params['t']}")
 
     # Tampilkan tabel dengan pemformatan 6 digit signifikan / E-notation
     st.dataframe(final_table.style.format('{:.6g}'))
@@ -189,21 +194,30 @@ if not st.session_state['calculated_table'].empty:
     st.markdown("---")
     st.subheader("Unduh Tabel Hasil")
     
-    # Input untuk nama file
-    default_file_name = f"tabel_probabilitas_n{n_input}_q{q_input}_t{t_input}.csv"
+    # Generate nama file default berdasarkan parameter tabel yang sedang ditampilkan
+    default_file_name_dynamic = (
+        f"tabel_probabilitas_n{table_params['n']}_q{table_params['q']}_t{table_params['t']}.csv"
+    )
+
+    # Input untuk nama file. Key-nya dibuat unik berdasarkan parameter
+    # agar Streamlit "mereset" nilai default jika parameter tabel berubah.
     custom_file_name_base = st.text_input(
         "Masukkan nama file untuk diunduh (tanpa ekstensi .csv):",
-        value=default_file_name.replace(".csv", ""),
-        key="download_file_name"
+        value=default_file_name_dynamic.replace(".csv", ""),
+        key=f"download_file_name_{table_params['n']}_{table_params['q']}_{table_params['t']}" 
+        # Tambahkan lambda_input_str ke key jika banyak lambdas berbeda membuat nama default terlalu panjang
     )
     
     # Pastikan nama file tidak kosong dan tambahkan ekstensi .csv jika belum ada
     if custom_file_name_base.strip() == "":
-        final_download_name = default_file_name
+        final_download_name = default_file_name_dynamic
     elif not custom_file_name_base.strip().endswith(".csv"):
         final_download_name = custom_file_name_base.strip() + ".csv"
     else:
         final_download_name = custom_file_name_base.strip()
+
+    # (Opsional) Baris debug untuk melihat nama file akhir
+    # st.info(f"Nama file yang akan diunduh: {final_download_name}")
 
     # Konversi DataFrame ke string CSV
     csv_string_io = io.StringIO()
