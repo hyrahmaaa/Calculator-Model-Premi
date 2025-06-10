@@ -116,14 +116,14 @@ if st.session_state.stage == 1:
     # Menggunakan kolom untuk tata letak yang lebih rapi
     col1, col2 = st.columns(2)
     with col1:
-        lambda_val = st.number_input("Masukkan nilai Lambda (λ):", value=0.01, format="%.6f", key='lambda_s1')
+        lambda_val = st.number_input("Masukkan nilai Lambda (λ):", value=0.000696, format="%.6f", key='lambda_s1')
         t_val = st.number_input("Masukkan nilai t:", value=1.0, format="%.2f", key='t_s1')
-        n = st.number_input("Masukkan nilai n (jumlah sapi total):", value=100, min_value=1, step=1, key='n_s1')
-        d = st.number_input("Masukkan nilai d:", value=5, min_value=0, max_value=n, step=1, key='d_s1')
+        n = st.number_input("Masukkan nilai n (jumlah sapi total):", value=3, min_value=0, max_value=n, step=1, key='n_s1')
+        d = st.number_input("Masukkan nilai d:", value=2, min_value=0, max_value=n, step=1, key='d_s1')
     with col2:
-        u = st.number_input("Masukkan nilai u:", value=10, min_value=0, max_value=n, step=1, key='u_s1')
-        q = st.number_input("Masukkan nilai q (probabilitas kematian/kegagalan, 0-1):", value=0.005, min_value=0.0, max_value=1.0, format="%.6f", key='q_s1')
-        alpha_val = st.number_input("Masukkan nilai Alpha (α):", value=0.5, format="%.2f", key='alpha_s1')
+        u = st.number_input("Masukkan nilai u:", value=3, min_value=0, max_value=n, step=1, key='u_s1')
+        q = st.number_input("Masukkan nilai q (probabilitas kematian/kegagalan, 0-1):", value=0.016992, min_value=0.0, max_value=1.0, format="%.6f", key='q_s1')
+        alpha_val = st.number_input("Masukkan nilai Alpha (α):", value=0.6, format="%.2f", key='alpha_s1')
         # p dihitung otomatis, tidak perlu input
 
     if st.button("Hitung Sesi 1", key='btn_s1_hitung'):
@@ -163,10 +163,10 @@ elif st.session_state.stage == 2:
 
     col1, col2 = st.columns(2)
     with col1:
-        rho = st.number_input("Masukkan nilai Rho (ρ):", value=0.05, format="%.2f", key='rho_s2')
-        eta = st.number_input("Masukkan nilai Eta (η):", value=0.02, format="%.2f", key='eta_s2')
+        rho = st.number_input("Masukkan nilai Rho (ρ):", value=0.10, format="%.2f", key='rho_s2')
+        eta = st.number_input("Masukkan nilai Eta (η):", value=0.10, format="%.2f", key='eta_s2')
     with col2:
-        QT = st.number_input("Masukkan nilai QT:", value=0.1, min_value=0.0, max_value=1.0, format="%.2f", key='qt_s2')
+        QT = st.number_input("Masukkan nilai QT:", value=0.10, min_value=0.0, max_value=1.0, format="%.2f", key='qt_s2')
 
     if st.button("Hitung Sesi 2", key='btn_s2_hitung'):
         if not (0 <= QT <= 1):
@@ -199,7 +199,7 @@ elif st.session_state.stage == 3:
     st.success(f"Nilai P_bar_I dari Sesi 2: **{st.session_state.PI_bar_result:.8f}**")
 
     # Ambil input harga sapi
-    P_price = st.number_input("Masukkan nilai P (Harga Sapi):", value=1000000.0, min_value=0.0, format="%.0f", key='p_price_s3')
+    P_price = st.number_input("Masukkan nilai P (Harga Sapi):", value=12000000.00, min_value=0.0, format="%.0f", key='p_price_s3')
 
     col1, col2 = st.columns(2)
     with col1:
