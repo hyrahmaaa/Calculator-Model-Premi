@@ -118,7 +118,7 @@ if st.session_state.stage == 1:
     with col1:
         lambda_val = st.number_input("Masukkan nilai Lambda (λ):", value=0.000696, format="%.6f", key='lambda_s1')
         t_val = st.number_input("Masukkan nilai t:", value=1.0, format="%.2f", key='t_s1')
-        n = st.number_input("Masukkan nilai n (jumlah sapi total):", value=3, min_value=0, max_value=n, step=1, key='n_s1')
+        n = st.number_input("Masukkan nilai n (jumlah sapi total):", value=3, min_value=0, max_value=1000, step=1, key='n_s1')
         d = st.number_input("Masukkan nilai d:", value=2, min_value=0, max_value=n, step=1, key='d_s1')
     with col2:
         u = st.number_input("Masukkan nilai u:", value=3, min_value=0, max_value=n, step=1, key='u_s1')
