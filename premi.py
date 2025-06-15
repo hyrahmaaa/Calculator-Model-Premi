@@ -206,7 +206,6 @@ elif st.session_state.stage == 3:
         if st.button("Hitung Sesi 3", key='btn_s3_hitung'):
             P_TOTAL_result = calculate_P_TOTAL(st.session_state.PI_bar_result, st.session_state.n_from_stage1, P_price)
             st.subheader("Output Akhir:")
-            st.balloons() # Efek visual
             st.success(f"Nilai P_TOTAL: **{P_TOTAL_result:.2f}**")
     with col2:
         if st.button("Mulai Ulang", key='btn_s3_reset'):
