@@ -93,8 +93,8 @@ q_input = st.sidebar.number_input(
     min_value=0.0,
     max_value=1.0,
     step=0.01,
-    value=0.2, # Default value
-    format="%.2f",
+    value=0.013478, 
+    format="%.6f",
     key="q_input"
 )
 
